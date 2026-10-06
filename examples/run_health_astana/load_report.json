@@ -1,0 +1,29 @@
+{
+  "total_calls": 11,
+  "agents": [
+    {
+      "agent": "data_agent",
+      "llm_calls": 3,
+      "tool_calls": 3,
+      "total": 6,
+      "share": 0.545
+    },
+    {
+      "agent": "forecast_agent",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "total": 4,
+      "share": 0.364
+    },
+    {
+      "agent": "orchestrator",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "total": 1,
+      "share": 0.091
+    }
+  ],
+  "max_share": 0.545,
+  "limit": 0.4,
+  "balanced": false
+}
