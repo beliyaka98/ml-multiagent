@@ -26,7 +26,7 @@
 | `task_plan` | orchestrator → первый агент плана | `TaskPlan` | ✅ |
 | `data_package` | data_agent → forecast_agent | `DataPackage` | ✅ |
 | `forecast_result` | forecast_agent → analyst_agent (в прототипе → user) | `ForecastResult` | ✅ |
-| `analysis_report` | analyst_agent → health_agent | `AnalysisReport` | A4 |
+| `analysis_report` | analyst_agent → health_agent (в прототипе → user) | `AnalysisReport` | ✅ |
 | `health_advice` | health_agent → reporter_agent | `HealthAdvice` | A4 |
 | `final_report` | reporter_agent → critic_agent | `FinalReport` | A4 |
 | `critic_verdict` | critic_agent → orchestrator | `CriticVerdict` | A4 |

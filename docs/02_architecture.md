@@ -48,7 +48,7 @@ flowchart TB
     DA --- T3[("Open-Meteo Weather API")]
     DA -.- T4[("OpenAQ: наземные станции")]
     FA --- T5[["ML-модель PM2.5 (joblib)"]]
-    AA -.- T6[["Корреляции и сезонная норма (pandas)"]]
+    AA --- T6[["Корреляции, застой воздуха, сезонная норма (pandas + история 2023–2026)"]]
     HA -.- T7[["Нормы ВОЗ и шкала AQI (локальная база)"]]
     CA -.- T8[["Проверка чисел в ответе"]]
 
@@ -59,7 +59,7 @@ flowchart TB
     T1 & T2 & T3 --- C
 
     classDef planned stroke-dasharray: 5 5
-    class AA,HA,RA,CA,T4,T6,T7,T8 planned
+    class HA,RA,CA,T4,T7,T8 planned
 ```
 
 Пунктир — агенты и инструменты Ассайнмента 4. Сплошная линия — уже реализовано в прототипе.
@@ -97,7 +97,7 @@ sequenceDiagram
     end
 ```
 
-В прототипе (Ассайнмент 2) работают шаги 1–5: Orchestrator → Data Agent → Forecast Agent.
+В прототипе (Ассайнмент 2) работают шаги 1–6: Orchestrator → Data Agent → Forecast Agent → Analyst Agent.
 Агенты, которых ещё нет, диспетчер пропускает и пишет в лог событие `agent_skipped`.
 
 ## Состояние задачи

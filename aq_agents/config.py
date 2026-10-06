@@ -31,6 +31,7 @@ class Settings:
     runs_dir: Path
     cache_path: Path
     model_path: Path
+    history_path: Path
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -48,6 +49,7 @@ class Settings:
             runs_dir=ROOT / os.getenv("RUNS_DIR", "runs"),
             cache_path=ROOT / "data" / "cache.sqlite",
             model_path=ROOT / "models" / "pm25_forecast.joblib",
+            history_path=ROOT / "data" / "training_daily.csv",
         )
 
 

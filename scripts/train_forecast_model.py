@@ -27,17 +27,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from aq_agents.config import ROOT  # noqa: E402
 from aq_agents.tools import openmeteo  # noqa: E402
 from aq_agents.tools.features import FEATURES, HORIZONS, build_frame, to_daily  # noqa: E402
+from aq_agents.tools.history import TRAINING_CITIES  # noqa: E402
 
-CITIES = {
-    "Алматы": (43.24, 76.89),
-    "Астана": (51.17, 71.45),
-    "Шымкент": (42.32, 69.60),
-    "Караганда": (49.80, 73.10),
-    "Усть-Каменогорск": (49.95, 82.62),
-    "Павлодар": (52.29, 76.95),
-    "Актобе": (50.28, 57.17),
-    "Атырау": (47.11, 51.88),
-}
+CITIES = TRAINING_CITIES
 START = date(2023, 1, 1)
 CALIB_FROM = pd.Timestamp("2025-04-01")  # калибровка интервала: апрель–сентябрь 2025
 TEST_FROM = pd.Timestamp("2025-10-01")   # тест: последний год, включая зиму 2025/26

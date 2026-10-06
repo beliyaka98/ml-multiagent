@@ -236,6 +236,40 @@ def load_chart(rows: list[dict]) -> alt.TopLevelMixin:
     return _style(alt.layer(bars, labels, rule, rule_txt).properties(height=46 * len(df) + 30))
 
 
+MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
+
+
+def season_chart(monthly: dict[str, float], current_month: int) -> alt.TopLevelMixin:
+    """Средний PM2.5 по месяцам: текущий месяц выделен цветом, остальные — серым."""
+    df = pd.DataFrame([{"Месяц": MONTHS[int(m) - 1], "n": int(m), "pm25": v,
+                        "Текущий": int(m) == current_month} for m, v in monthly.items()])
+    x = alt.X("Месяц:N", sort=MONTHS, title=None, axis=alt.Axis(labelAngle=0))
+    bars = alt.Chart(df).mark_bar(size=22, cornerRadiusEnd=4).encode(
+        x, alt.Y("pm25:Q", title="PM2.5, мкг/м³"),
+        color=alt.condition("datum['Текущий']", alt.value(BLUE), alt.value(AXIS)),
+        tooltip=["Месяц:N", alt.Tooltip("pm25:Q", title="средний PM2.5", format=".1f")])
+    who = alt.Chart(pd.DataFrame({"y": [WHO_PM25_24H]})).mark_rule(color=MUTED, strokeDash=[4, 4]).encode(y="y:Q")
+    return _style(alt.layer(bars, who).properties(height=240))
+
+
+def show_analysis(analysis: dict, current_month: int) -> None:
+    st.subheader("Почему так — Analyst Agent")
+    trend = {"rising": "↗ растёт", "stable": "→ стабильно", "falling": "↘ снижается"}[analysis["trend"]]
+    deviation = analysis.get("vs_seasonal_norm_pct")
+    c1, c2 = st.columns(2)
+    c1.metric("Тренд PM2.5 (последние дни и прогноз)", trend, border=True)
+    c2.metric(f"Отклонение от нормы ({MONTHS[current_month - 1]})",
+              f"{deviation:+.0f}%" if deviation is not None else "—", border=True)
+    strength = {"weak": "слабый", "moderate": "умеренный", "strong": "сильный"}
+    for d in analysis["drivers"]:
+        st.markdown(f"- **{d['factor']}** · {strength[d['strength']]} фактор — {d['evidence']}")
+    st.markdown(analysis["summary"])
+    if analysis.get("monthly_pm25"):
+        st.altair_chart(season_chart(analysis["monthly_pm25"], current_month), width="stretch", theme=None)
+        st.caption(f"Средний PM2.5 по месяцам, {analysis.get('history_city') or ''} (2023–2026, CAMS). "
+                   "Синим — текущий месяц, пунктир — суточная норма ВОЗ (15 мкг/м³).")
+
+
 # ---------- Результаты прогона ----------
 
 def show_results(run_dir: Path) -> None:
@@ -255,6 +289,11 @@ def show_results(run_dir: Path) -> None:
             st.info(render_answer(view))
         else:
             show_forecast(run_dir, results)
+            if "analyst_agent" in results:
+                latest = (results["data_agent"].get("latest_observed") or {}).get("time")
+                month = pd.Timestamp(latest).month if latest else int(state["task_id"][4:6])
+                st.divider()
+                show_analysis(results["analyst_agent"], month)
         with st.expander("Текстовый ответ (как в консоли)"):
             st.text(render_answer(view))
 
@@ -279,8 +318,9 @@ def show_results(run_dir: Path) -> None:
                 st.success(f"✓ Максимальная доля {report['max_share']:.0%} — в пределах лимита 40%.")
             elif len(IMPLEMENTED) < len(AGENTS):
                 st.warning(f"⚠ Максимальная доля {report['max_share']:.0%}: в прототипе работают "
-                           f"{len(IMPLEMENTED)} агента из {len(AGENTS)}, поэтому вызовы делятся на троих. "
-                           "В полной системе ожидается около 23% (docs/05_load_balance.md).")
+                           f"{len(IMPLEMENTED)} агента из {len(AGENTS)}, и в этом запросе вызовы разделились "
+                           "между немногими агентами. В полной системе ожидается около 23% "
+                           "(docs/05_load_balance.md).")
             else:
                 st.error(f"✕ Максимальная доля {report['max_share']:.0%} превышает лимит 40%.")
 
@@ -343,7 +383,7 @@ def saved_runs() -> dict[str, Path]:
 
 st.markdown(CSS, unsafe_allow_html=True)
 st.title("🌫️ AirQ-KZ — многоагентная система качества воздуха")
-st.caption("Прототип (Ассайнмент 2): Orchestrator → Data Agent → Forecast Agent. "
+st.caption("Прототип (Ассайнмент 2): Orchestrator → Data Agent → Forecast Agent → Analyst Agent. "
            "Пунктиром — агенты, которые появятся в Ассайнменте 4.")
 
 settings = get_settings()

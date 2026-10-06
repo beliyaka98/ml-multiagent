@@ -96,7 +96,10 @@ class OpenAICompatConversation:
             except openai.APIStatusError as e:
                 raise LLMError(f"Ошибка API {e.status_code}: {e.message}") from e
             except openai.APIConnectionError as e:
-                raise LLMError("Нет соединения с API провайдера") from e
+                host = self.llm.client.base_url.host
+                raise LLMError(f"Нет соединения с {host}: {e.__cause__ or e}. Проверьте интернет; если остальные "
+                               "сайты открываются, сеть может блокировать этот API — смените сеть или используйте "
+                               "режим повтора сохранённого прогона") from e
 
     def add_tool_results(self, results: list[ToolResult]) -> None:
         for r in results:

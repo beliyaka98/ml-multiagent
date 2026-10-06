@@ -16,11 +16,11 @@ from uuid import uuid4
 
 from pydantic import BaseModel
 
-from .agents import DataAgent, ForecastAgent, Orchestrator
+from .agents import AnalystAgent, DataAgent, ForecastAgent, Orchestrator
 from .config import Settings, get_settings
 from .llm import LLM, LLMError, make_llm
 from .logger import RunLogger
-from .messages import DataPackage, ForecastResult, Message, TaskPlan, UserQuery
+from .messages import AnalysisReport, DataPackage, ForecastResult, Message, TaskPlan, UserQuery
 from .runtime import AgentContext, AgentError, BaseAgent, Budget
 from .state import TaskState
 
@@ -29,11 +29,13 @@ IMPLEMENTED: dict[str, BaseAgent] = {
     "orchestrator": Orchestrator(),
     "data_agent": DataAgent(),
     "forecast_agent": ForecastAgent(),
+    "analyst_agent": AnalystAgent(),
 }
 OUTPUT_TYPE = {
     "orchestrator": "task_plan",
     "data_agent": "data_package",
     "forecast_agent": "forecast_result",
+    "analyst_agent": "analysis_report",
 }
 
 
@@ -144,6 +146,15 @@ def render_answer(state: TaskState) -> str:
             lines.append(f"  {d.date}: {d.final_pm25} — {d.category} "
                          f"(источник: {d.source}, уверенность: {d.confidence}; {ml}; {cams})")
         lines.append(f"Обоснование: {fc.rationale}")
+    if "analyst_agent" in state.results:
+        an = AnalysisReport.model_validate(state.results["analyst_agent"])
+        trend = {"rising": "растёт", "stable": "стабилен", "falling": "снижается"}[an.trend]
+        norm = f"{an.vs_seasonal_norm_pct:+.0f}% к норме месяца" if an.vs_seasonal_norm_pct is not None else ""
+        lines.append(f"\nПочему так (тренд: {trend}{'; ' + norm if norm else ''}):")
+        strength = {"weak": "слабый", "moderate": "умеренный", "strong": "сильный"}
+        for d in an.drivers:
+            lines.append(f"  • {d.factor} ({strength[d.strength]} фактор): {d.evidence}")
+        lines.append(an.summary)
     skipped = [s for s in plan.steps if s not in IMPLEMENTED]
     if skipped:
         lines.append(f"\n[прототип] Агенты {', '.join(skipped)} будут добавлены в Ассайнменте 4.")

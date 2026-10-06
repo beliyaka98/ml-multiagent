@@ -144,6 +144,8 @@ class AnalysisReport(BaseModel):
     trend: Literal["rising", "stable", "falling"]
     vs_seasonal_norm_pct: float | None
     summary: str
+    history_city: str | None = None  # по какому городу взята сезонная норма
+    monthly_pm25: dict[str, float] | None = None  # средний PM2.5 по месяцам ("1".."12")
 
 
 class HealthAdvice(BaseModel):
